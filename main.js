@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 
@@ -7,11 +7,9 @@ function createWindow() {
         width: 800,
         height: 600,
         webPreferences: {
-            // CORE CONCEPT: Security Best Practices
-            // We point to our new preload script to create a secure bridge
             preload: path.join(__dirname, 'preload.js'),
-            nodeIntegration: false,
-            contextIsolation: true
+            contextIsolation: true,
+            nodeIntegration: false
         }
     });
 
@@ -20,14 +18,19 @@ function createWindow() {
 
 app.whenReady().then(createWindow);
 
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit();
+// NEW: Listener to open a native file selection window
+ipcMain.handle('select-file', async () => {
+    const result = await dialog.showOpenDialog({
+        properties: ['openFile'],
+        filters: [{ name: 'Excel Files', extensions: ['xlsx', 'xls'] }]
+    });
+    
+    if (result.canceled) return null;
+    return result.filePaths[0]; // This is the REAL full path
 });
 
 ipcMain.on('run-python', (event, data) => {
     const { filePath, lotNumber } = data;
-    
-    // Path to your venv python executable
     const pythonPath = path.join(__dirname, 'venv', 'Scripts', 'python.exe');
     const scriptPath = path.join(__dirname, 'processor.py');
 
@@ -40,4 +43,8 @@ ipcMain.on('run-python', (event, data) => {
     pythonProcess.stderr.on('data', (data) => {
         event.reply('python-output', `ERROR: ${data.toString()}`);
     });
+});
+
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
 });

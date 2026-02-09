@@ -1,51 +1,70 @@
-import pandas as pd
+import openpyxl
 import sys
 import os
+import shutil
+import warnings
 
-def process_spreadsheet(file_path, target_lot):
+# We still suppress warnings to keep the UI clean
+warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
+
+def process_spreadsheet_with_styles(file_path, target_lot):
     try:
-        # Load the entire Excel file into a dictionary of DataFrames
-        # sheet_name=None ensures we read EVERY sheet in the workbook
-        print(f"Reading file: {file_path}...")
-        excel_data = pd.read_excel(file_path, sheet_name=None)
+        print(f"Opening master file: {os.path.basename(file_path)}...")
         
-        # Determine the output path (saves in the same folder as the source)
-        output_filename = f"Lot_{target_lot}_Export.xlsx"
+        # 1. Create the output path
+        output_filename = f"Lot_{target_lot}_Formatted.xlsx"
         output_path = os.path.join(os.path.dirname(file_path), output_filename)
         
-        # We use 'openpyxl' as the engine to write the new Excel file
-        with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
-            found_any = False
-            
-            for sheet_name, df in excel_data.items():
-                # CORE LOGIC:
-                # 1. Access Column C (index 2)
-                # 2. Convert to string to avoid errors with mixed data types
-                # 3. Check if our target_lot exists in that column
-                column_c_data = df.iloc[:, 2].astype(str).str.lower()
-                
-                if target_lot.lower() in column_c_data.values:
-                    print(f"Match found in sheet: {sheet_name}")
-                    # Write the matching sheet to our new workbook
-                    df.to_excel(writer, sheet_name=sheet_name, index=False)
-                    found_any = True
+        # 2. Copy the entire file first to preserve ALL formatting and styles
+        # This is the "Template" approach
+        shutil.copy2(file_path, output_path)
         
-        if found_any:
-            print(f"SUCCESS: Created {output_filename}")
+        # 3. Load the COPIED workbook so we can edit it
+        # data_only=False ensures we keep formulas; keep_vba=True keeps macros
+        wb = openpyxl.load_workbook(output_path, data_only=False)
+        
+        sheets_to_delete = []
+        match_count = 0
+        total_sheets = len(wb.sheetnames)
+
+        # 4. Iterate and find which sheets to keep
+        for sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+            found_in_sheet = False
+            
+            # Check Column C (Column 3) for the lot number
+            # We iterate through the rows in Column C
+            for cell in ws['C']:
+                if cell.value and str(target_lot).lower() in str(cell.value).lower():
+                    found_in_sheet = True
+                    break
+            
+            if found_in_sheet:
+                match_count += 1
+            else:
+                sheets_to_delete.append(sheet_name)
+        
+        # 5. Remove the non-matching sheets
+        if match_count > 0:
+            for name in sheets_to_delete:
+                del wb[name]
+            
+            wb.save(output_path)
+            print(f"SUCCESS: Extracted {match_count} sheets with full formatting to:\n{output_filename}")
         else:
-            print(f"NOT FOUND: Lot {target_lot} was not found in Column C of any sheet.")
-            # If we created an empty file during the process, delete it
+            # Clean up the copy if no matches were found
+            wb.close()
             if os.path.exists(output_path):
                 os.remove(output_path)
+            print(f"NOT FOUND: Lot {target_lot} not found in any of the {total_sheets} sheets.")
 
     except Exception as e:
         print(f"CRITICAL ERROR: {str(e)}")
 
 if __name__ == "__main__":
-    # sys.argv allows Electron to pass the file path and lot number to this script
     if len(sys.argv) > 2:
         file_path = sys.argv[1]
         target_lot = sys.argv[2]
-        process_spreadsheet(file_path, target_lot)
+        process_spreadsheet_with_styles(file_path, target_lot)
     else:
-        print("ERROR: Not enough arguments provided to the Python script.")
+        print("ERROR: Missing arguments.")
