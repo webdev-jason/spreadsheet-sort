@@ -1,0 +1,25 @@
+# Python Virtual Environment
+venv/
+.venv/
+ENV/
+env/
+
+# Node.js / Electron Dependencies
+node_modules/
+npm-debug.log*
+
+# Python Cache
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+
+# Excel Temporary Files
+~$*.xlsx
+~$*.xls
+
+# Project Exports (Optional - keeps your repo clean of the actual results)
+Lot_*_Export.xlsx

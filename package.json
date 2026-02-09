@@ -1,0 +1,12 @@
+{
+  "name": "spreadsheet-sort",
+  "version": "1.0.0",
+  "description": "Sorts Excel sheets by Lot Number",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^34.0.2"
+  }
+}
