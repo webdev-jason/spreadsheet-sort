@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 
@@ -18,7 +18,6 @@ function createWindow() {
 
 app.whenReady().then(createWindow);
 
-// NEW: Listener to open a native file selection window
 ipcMain.handle('select-file', async () => {
     const result = await dialog.showOpenDialog({
         properties: ['openFile'],
@@ -26,7 +25,7 @@ ipcMain.handle('select-file', async () => {
     });
     
     if (result.canceled) return null;
-    return result.filePaths[0]; // This is the REAL full path
+    return result.filePaths[0];
 });
 
 ipcMain.on('run-python', (event, data) => {
@@ -43,6 +42,13 @@ ipcMain.on('run-python', (event, data) => {
     pythonProcess.stderr.on('data', (data) => {
         event.reply('python-output', `ERROR: ${data.toString()}`);
     });
+});
+
+// NEW: Open the folder containing the file
+ipcMain.on('open-folder', (event, filePath) => {
+    if (filePath) {
+        shell.showItemInFolder(filePath);
+    }
 });
 
 app.on('window-all-closed', () => {

@@ -24,12 +24,15 @@
         .info { background: #e2e3e5; display: block !important; }
         .success { background: #d4edda; color: #155724; display: block !important; }
         .error { background: #f8d7da; color: #721c24; display: block !important; }
+        #openFolderBtn { 
+            margin-top: 10px; display: none; background-color: #28a745; color: white; 
+            border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>Excel Lot Sorter</h1>
-        
         <div class="field">
             <label>Master Spreadsheet</label>
             <div class="file-box">
@@ -37,25 +40,24 @@
                 <span id="filePathDisplay">No file selected</span>
             </div>
         </div>
-
         <div class="field">
             <label>Target Lot Number</label>
             <input type="text" id="lotInput" placeholder="e.g. IR021025-01">
         </div>
-
         <button id="runBtn" class="primary-btn">Start Extraction</button>
-
         <div id="status"></div>
+        <button id="openFolderBtn">📁 Open Result Location</button>
     </div>
 
     <script>
         let selectedPath = null;
+        let lastResultPath = null;
         const browseBtn = document.getElementById('browseBtn');
         const runBtn = document.getElementById('runBtn');
         const pathDisplay = document.getElementById('filePathDisplay');
         const status = document.getElementById('status');
+        const openFolderBtn = document.getElementById('openFolderBtn');
 
-        // Trigger the native file dialog
         browseBtn.addEventListener('click', async () => {
             selectedPath = await window.electronAPI.selectFile();
             if (selectedPath) {
@@ -65,24 +67,31 @@
 
         runBtn.addEventListener('click', () => {
             const lotValue = document.getElementById('lotInput').value;
-
             if (!selectedPath || !lotValue) {
                 updateStatus('Missing file or lot number', 'error');
                 return;
             }
-
+            openFolderBtn.style.display = 'none';
             updateStatus('Running Python script...', 'info');
-
-            window.electronAPI.runPython({
-                filePath: selectedPath,
-                lotNumber: lotValue
-            });
+            window.electronAPI.runPython({ filePath: selectedPath, lotNumber: lotValue });
         });
 
         window.electronAPI.onPythonOutput((message) => {
-            if (message.includes('SUCCESS')) updateStatus(message, 'success');
-            else if (message.includes('ERROR')) updateStatus(message, 'error');
-            else updateStatus(message, 'info');
+            if (message.includes('SUCCESS')) {
+                updateStatus(message, 'success');
+                // Extract the folder path to open it later
+                // The filename is always created in the same directory as selectedPath
+                openFolderBtn.style.display = 'block';
+            } else if (message.includes('ERROR')) {
+                updateStatus(message, 'error');
+            } else {
+                updateStatus(message, 'info');
+            }
+        });
+
+        openFolderBtn.addEventListener('click', () => {
+            // We open the folder of the original file, which is where the new one is saved
+            window.electronAPI.openFolder(selectedPath);
         });
 
         function updateStatus(text, className) {
