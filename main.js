@@ -30,8 +30,16 @@ ipcMain.handle('select-file', async () => {
 
 ipcMain.on('run-python', (event, data) => {
     const { filePath, lotNumber } = data;
-    const pythonPath = path.join(__dirname, 'venv', 'Scripts', 'python.exe');
-    const scriptPath = path.join(__dirname, 'processor.py');
+    
+    // CORE CONCEPT: Production Pathing
+    // 'app.isPackaged' checks if you are running in VS Code or as an .exe
+    const pythonPath = app.isPackaged 
+        ? path.join(process.resourcesPath, '..', 'venv', 'Scripts', 'python.exe')
+        : path.join(__dirname, 'venv', 'Scripts', 'python.exe');
+
+    const scriptPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'processor.py')
+        : path.join(__dirname, 'processor.py');
 
     const pythonProcess = spawn(pythonPath, [scriptPath, filePath, lotNumber]);
 
@@ -44,7 +52,6 @@ ipcMain.on('run-python', (event, data) => {
     });
 });
 
-// NEW: Open the folder containing the file
 ipcMain.on('open-folder', (event, filePath) => {
     if (filePath) {
         shell.showItemInFolder(filePath);

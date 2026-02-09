@@ -4,9 +4,32 @@
   "description": "Sorts Excel sheets by Lot Number",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.jason.spreadsheetsort",
+    "win": {
+      "target": "portable",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "files": [
+      "**/*",
+      "!dist/*"
+    ],
+    "extraFiles": [
+      {
+        "from": "venv",
+        "to": "venv",
+        "filter": ["**/*"]
+      }
+    ],
+    "extraResources": [
+      "processor.py"
+    ]
   },
   "devDependencies": {
-    "electron": "^34.0.2"
+    "electron": "^34.0.2",
+    "electron-builder": "^24.13.3"
   }
 }
