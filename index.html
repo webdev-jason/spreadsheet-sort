@@ -28,26 +28,19 @@
 <body>
     <div class="card">
         <h1>Excel Lot Sorter</h1>
-        
         <div class="field">
             <label>Master Spreadsheet</label>
             <input type="file" id="fileInput" accept=".xlsx, .xls">
         </div>
-
         <div class="field">
             <label>Target Lot Number</label>
             <input type="text" id="lotInput" placeholder="Enter Lot ID (e.g. IR021025-01)">
         </div>
-
         <button id="runBtn">Start Extraction</button>
-
         <div id="status"></div>
     </div>
 
     <script>
-        // Import the walkie-talkie from Electron
-        const { ipcRenderer } = require('electron');
-
         const runBtn = document.getElementById('runBtn');
         const fileInput = document.getElementById('fileInput');
         const lotInput = document.getElementById('lotInput');
@@ -62,23 +55,24 @@
                 return;
             }
 
-            showStatus('Python is scanning sheets... this may take a moment.', 'info');
+            showStatus('Processing... this may take a moment.', 'info');
             
-            // Send the file path and lot to main.js
-            ipcRenderer.send('run-python', {
+            // CORE CONCEPT: webUtils
+            // In modern Electron, we use this to safely get the path of a selected file
+            const filePath = window.electronAPI ? file.path : null;
+
+            window.electronAPI.runPython({
                 filePath: file.path,
                 lotNumber: lot
             });
         });
 
-        // Listen for the reply from Python
-        ipcRenderer.on('python-output', (event, message) => {
+        window.electronAPI.onPythonOutput((message) => {
             if (message.includes('SUCCESS')) {
                 showStatus(message, 'success');
             } else if (message.includes('ERROR')) {
                 showStatus(message, 'error');
             } else {
-                // This captures general progress prints from Python
                 showStatus(message, 'info');
             }
         });
