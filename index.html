@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Spreadsheet Sorter</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 25px; background-color: #f8f9fa; color: #333; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); max-width: 500px; margin: 0 auto; }
+        h1 { margin-top: 0; font-size: 1.4rem; color: #007bff; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .field { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { 
+            background-color: #007bff; color: white; border: none; padding: 12px; 
+            border-radius: 6px; cursor: pointer; width: 100%; font-size: 1rem; font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #0056b3; }
+        #status { 
+            margin-top: 20px; padding: 12px; border-radius: 6px; font-size: 0.85rem; 
+            display: none; white-space: pre-wrap; line-height: 1.4;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block !important; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: block !important; }
+        .info { background-color: #e2e3e5; color: #383d41; display: block !important; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Excel Lot Sorter</h1>
+        
+        <div class="field">
+            <label>Master Spreadsheet</label>
+            <input type="file" id="fileInput" accept=".xlsx, .xls">
+        </div>
+
+        <div class="field">
+            <label>Target Lot Number</label>
+            <input type="text" id="lotInput" placeholder="Enter Lot ID (e.g. IR021025-01)">
+        </div>
+
+        <button id="runBtn">Start Extraction</button>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Import the walkie-talkie from Electron
+        const { ipcRenderer } = require('electron');
+
+        const runBtn = document.getElementById('runBtn');
+        const fileInput = document.getElementById('fileInput');
+        const lotInput = document.getElementById('lotInput');
+        const status = document.getElementById('status');
+
+        runBtn.addEventListener('click', () => {
+            const file = fileInput.files[0];
+            const lot = lotInput.value.trim();
+
+            if (!file || !lot) {
+                showStatus('Please select a file and enter a lot number.', 'error');
+                return;
+            }
+
+            showStatus('Python is scanning sheets... this may take a moment.', 'info');
+            
+            // Send the file path and lot to main.js
+            ipcRenderer.send('run-python', {
+                filePath: file.path,
+                lotNumber: lot
+            });
+        });
+
+        // Listen for the reply from Python
+        ipcRenderer.on('python-output', (event, message) => {
+            if (message.includes('SUCCESS')) {
+                showStatus(message, 'success');
+            } else if (message.includes('ERROR')) {
+                showStatus(message, 'error');
+            } else {
+                // This captures general progress prints from Python
+                showStatus(message, 'info');
+            }
+        });
+
+        function showStatus(text, type) {
+            status.innerText = text;
+            status.className = type;
+        }
+    </script>
+</body>
+</html>
