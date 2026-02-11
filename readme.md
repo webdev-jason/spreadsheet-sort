@@ -6,59 +6,46 @@
 
 # 📊 Spreadsheet Data Separation Tool
 
-A hybrid desktop application designed to automate the segmentation of master production spreadsheets. It extracts data based on unique identifiers (such as Lot Numbers) and generates individual, formatted Excel reports for manufacturing and quality control workflows.
+A hybrid desktop application designed to automate the segmentation of master production spreadsheets. It surgically extracts sheets based on specific Lot Numbers while preserving all original formatting, conditional rules, and Excel styles.
 
 ## ✨ Features
-* **🎯 Precision Segmentation**: Uses a Python engine to split large datasets into individual files based on specific column values.
-* **🎨 Intelligent Formatting**: Preserves original Excel styling and automatically applies customized formatting to exported reports.
-* **📂 Native File Handling**: Features a native OS file dialog for selecting source workbooks and defining output directories.
-* **⚡ Hybrid Architecture**: Combines a modern Electron GUI with the high-performance data processing of the Python `pandas` library.
-* **🛠️ Dynamic UI**: Real-time feedback and directory shortcuts to immediately access processed exports.
+* **🎯 Surgical Extraction**: Scans Column C across hundreds of sheets to identify and isolate specific production lots.
+* **🎨 High-Fidelity Preservation**: Uses a template duplication strategy to ensure 100% of original Excel styling, borders, and conditional formatting remain intact.
+* **📂 Native Integration**: Uses native Windows file dialogs for secure and reliable file path handling.
+* **⚡ Hybrid Performance**: Combines a modern Electron GUI with the robust spreadsheet manipulation power of openpyxl and pandas.
+* **📁 One-Click Access**: Features a direct link to the output directory immediately upon successful processing.
 
 ## 🛠️ Tech Stack
 * **UI Framework**: Electron
-* **Logic Engine**: Python 3.10+ (`pandas`, `openpyxl`)
-* **Frontend**: HTML5, Vanilla JavaScript (ES6+)
-* **Inter-Process Communication**: Electron `ipcMain` / `ipcRenderer` and `child_process` execution.
+* **Logic Engine**: Python 3.12+ (openpyxl, pandas)
+* **Bridge**: Electron contextBridge for secure IPC (Inter-Process Communication).
+* **Packaging**: electron-builder with NSIS installer configuration.
 
-## 🚀 Installation & Local Setup
+## 🚀 Getting Started
 
-### 1. Prerequisites
-* **Node.js**: LTS version.
-* **Python 3.10+**: Ensure Python is added to your system PATH.
+### For Users (Production)
+Download the latest spreadsheet-sort-setup-1.0.0.exe from the Releases page. Run the installer to add the tool to your computer. This provides a faster startup compared to portable versions.
 
-### 2. Repository Setup
-```bash
-# Clone the repository
-git clone [https://github.com/webdev-jason/spreadsheet-sort.git](https://github.com/webdev-jason/spreadsheet-sort.git)
+### For Developers (Local Setup)
+1. **Clone & Install Node Dependencies**
+   git clone https://github.com/webdev-jason/spreadsheet-sort.git
+   cd spreadsheet-sort
+   npm install
 
-# Navigate to the directory
-cd spreadsheet-sort
+2. **Setup Python Environment**
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
 
-# Install Node dependencies
-npm install
-```
+3. **Run in Development Mode**
+   npm start
 
-### 3. Python Environment
-```bash
-# Create and activate a virtual environment
-python -m venv venv
-# Windows:
-.\venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-
-# Install Python dependencies
-pip install -r requirements.txt
-```
-
-### 4. Running the App
-```bash
-npm start
-```
+## 📦 Building the Installer
+To generate a new NSIS installer that allows users to select an installation directory:
+npm run dist
 
 ## 👤 Author
 **Jason Sparks** - [GitHub Profile](https://github.com/webdev-jason)
 
 ## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.

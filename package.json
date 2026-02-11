@@ -10,8 +10,15 @@
   "build": {
     "appId": "com.jason.spreadsheetsort",
     "win": {
-      "target": "portable",
+      "target": [
+        "nsis"
+      ],
       "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Excel Lot Sorter"
     },
     "files": [
       "**/*",
@@ -21,7 +28,9 @@
       {
         "from": "venv",
         "to": "venv",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "extraResources": [
