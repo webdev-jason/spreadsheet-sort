@@ -1,0 +1,17 @@
+# Handle line endings
+* text=auto
+
+# Language detection
+*.js linguist-language=JavaScript
+*.py linguist-language=Python
+*.html linguist-language=HTML
+*.css linguist-language=CSS
+
+# Treat Excel files as binary
+*.xlsx binary
+*.xls binary
+
+# Ignore build artifacts and virtual environments
+venv/* linguist-vendored
+dist/* linguist-vendored
+node_modules/* linguist-vendored
